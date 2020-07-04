@@ -3,7 +3,6 @@ import logging
 import threading
 import time
 
-import requests
 from aiohttp import web
 
 from pyctuator.pyctuator import Pyctuator
@@ -51,18 +50,23 @@ class AiohttpPyctuatorServer(PyctuatorServer):
         self.server_started = False
 
     async def _run_server(self) -> None:
+        logging.info("Preparing to start aiohttp server")
         runner = web.AppRunner(self.app)
         await runner.setup()
 
-        site = web.TCPSite(runner, "localhost", 8888)
+        logging.info("Starting aiohttp server")
+        site = web.TCPSite(runner, port=8888)
         await site.start()
         self.server_started = True
+        logging.info("aiohttp server started")
 
         while not self.should_stop_server:
             await asyncio.sleep(1)
 
+        logging.info("Shutting down aiohttp server")
         await runner.shutdown()
         await runner.cleanup()
+        logging.info("aiohttp server is shutdown")
 
     def _start_in_thread(self) -> None:
         loop = asyncio.new_event_loop()
